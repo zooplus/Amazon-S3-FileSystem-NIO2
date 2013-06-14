@@ -31,10 +31,11 @@
         <hr>
 
         <section id="main_content">
-          <p><strong>Amazon Aws S3</strong> es el servicio que ofrece Amazon para el almacenamiento de archivos en la nube. <strong>NIO2</strong> es una nueva <strong>API</strong> de manejo de ficheros, de Java, introducida en su versión 7.
-En este proyecto se ofrece una <strong>primera implementación</strong>, básica y poco optimizada, pero "completa" de la API para poder gestionar ficheros y carpetas directamente en <strong>Amazon S3</strong>.</p>
+          <p><strong>Amazon Simple Storage Service</strong> (S3) provides a fully redundant data storage infrastructure for storing and retrieving any amount of data, at any time.
+NIO2 is the new file management <strong>API</strong>, introduced in Java version 7. 
+This project provides a first API implementation, little optimized, but <strong>"complete"</strong> to manage files and folders directly on <strong>Amazon S3</strong>.</p>
 
-<p><em>Features</em>:</p>
+<p><strong>Features</strong>:</p>
 
 <ul>
 <li>Crear directorio y ficheros</li>
@@ -42,7 +43,7 @@ En este proyecto se ofrece una <strong>primera implementación</strong>, básica
 <li>Copiar entre Paths con distintos providers</li>
 <li>Recorrer ficheros de un directorio.</li>
 <li>Permite trabajar con directorios virtuales (folders que no existen como objetos en Amazon S3 y son subkeys de un elemento)</li>
-</ul><p><em>Roadmap</em>:</p>
+</ul><p><strong>Roadmap</strong>:</p>
 
 <ul>
 <li>Performance issue (slow querys with virtual folders)</li>
@@ -51,7 +52,7 @@ En este proyecto se ofrece una <strong>primera implementación</strong>, básica
 <li>Decidir que hacer con FileSystemProvider. ¿se pueden crear varios? ¿por bucketname, en vez de por endpoint?</li>
 <li>Utilizar Multipart para una mejor implementación del outputstream</li>
 <li>¿alguna idea para los seekable?</li>
-</ul><p><em>Fuera del Roadmap</em>:</p>
+</ul><p><strong>Fuera del Roadmap</strong>:</p>
 
 <ul>
 <li>Watchers</li>
