@@ -2,6 +2,9 @@
 <html>
   <head>
     <meta charset='utf-8'>
+    <meta name="description" content="Amazon Simple Storage Service (S3) provides a fully redundant data storage infrastructure for storing and retrieving any amount of data, at any time. JSR-203, NIO2, is the new file management API, introduced in Java version 7"/>
+    <meta name="author" content="Javier Arnáiz"/>
+    <meta name="keywords" content="Amazon S3 Java JSR-203 NIO2 FileSystem"/>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
     <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
@@ -18,7 +21,7 @@
       <div class="inner">
 
         <header>
-          <h1>Amazon S3 API for Java 7</h1>
+          <h1>Amazon S3 API JSR-203 for Java 7</h1>
           <h2>An Amazon AWS S3 FileSystem Provider for Java 7 (NIO2)</h2>
         </header>
 
@@ -32,32 +35,36 @@
 
         <section id="main_content">
           <p><strong>Amazon Simple Storage Service</strong> (S3) provides a fully redundant data storage infrastructure for storing and retrieving any amount of data, at any time.
-NIO2 is the new file management <strong>API</strong>, introduced in Java version 7. 
+JSR-203, NIO2, is the new file management <strong>API</strong>, introduced in Java version 7. 
 This project provides a first API implementation, little optimized, but <strong>"complete"</strong> to manage files and folders directly on <strong>Amazon S3</strong>.</p>
 
 <p><strong>Features</strong>:</p>
 
 <ul>
-<li>Crear directorio y ficheros</li>
-<li>Borrar directorios y ficheros</li>
-<li>Copiar entre Paths con distintos providers</li>
-<li>Recorrer ficheros de un directorio.</li>
-<li>Permite trabajar con directorios virtuales (folders que no existen como objetos en Amazon S3 y son subkeys de un elemento)</li>
-</ul><p><strong>Roadmap</strong>:</p>
+<li>Copy and create folders and files</li>
+<li>Delete folders and files</li>
+<li>Copy paths between different providers</li>
+<li>Walk file tree</li>
+<li>Works with virtual s3 folders (not really exists and are element's subkeys)</li>
+</ul>
+
+<p><strong>Roadmap</strong>:</p>
 
 <ul>
 <li>Performance issue (slow querys with virtual folders)</li>
-<li>Muchos mas tests unitarios (better test coverage)</li>
-<li>No permitir subir ficheros con mismo nombre que folders y viceversa (Disallow upload binary files with same name as folders and vice versa)</li>
-<li>Decidir que hacer con FileSystemProvider. ¿se pueden crear varios? ¿por bucketname, en vez de por endpoint?</li>
-<li>Utilizar Multipart para una mejor implementación del outputstream</li>
-<li>¿alguna idea para los seekable?</li>
-</ul><p><strong>Fuera del Roadmap</strong>:</p>
+<li>Better test coverag)</li>
+<li>Disallow upload binary files with same name as folders and vice versa</li>
+<li>Multi endpoint fileSystem (Actually one FileSystem at the same time)</li>
+</ul>
+
+<p><strong>Out of Roadmap</strong>:</p>
 
 <ul>
 <li>Watchers</li>
 <li>FileStore</li>
-</ul><p>This project are forked the repoasitory owned by martint <a href="https://github.com/martint/s3fs">https://github.com/martint/s3fs</a>. Thanks!</p>
+</ul>
+
+<p>This project are forked the repoasitory owned by martint <a href="https://github.com/martint/s3fs">https://github.com/martint/s3fs</a>. Thanks!</p>
         </section>
 
         <footer>
