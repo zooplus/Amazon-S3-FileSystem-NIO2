@@ -1,44 +1,123 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-us">
   <head>
-    <meta charset='utf-8'>
-    <meta name="description" content="Amazon Simple Storage Service (S3) provides a fully redundant data storage infrastructure for storing and retrieving any amount of data, at any time. JSR-203, NIO2, is the new file management API, introduced in Java version 7"/>
-    <meta name="author" content="Javier Arnáiz"/>
-    <meta name="keywords" content="Amazon S3 Java JSR-203 NIO2 FileSystem"/>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
-    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
-    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-    <title>Amazon S3 API JSR-203 NIO2 Java 7</title>
+    <meta charset="UTF-8">
+    <title>Amazon S3 API for Java 7 by Upplication</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
   </head>
-
   <body>
-    <div id="container">
-      <div class="inner">
+    <section class="page-header">
+      <h1 class="project-name">Amazon S3 API for Java 7</h1>
+      <h2 class="project-tagline">An Amazon AWS S3 FileSystem Provider for Java 7 (NIO2)</h2>
+      <a href="https://github.com/Upplication/Amazon-S3-FileSystem-NIO2" class="btn">View on GitHub</a>
+      <a href="https://github.com/Upplication/Amazon-S3-FileSystem-NIO2/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/Upplication/Amazon-S3-FileSystem-NIO2/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
 
-        <header>
-          <h1>Amazon S3 API JSR-203 for Java 7</h1>
-          <h2>An Amazon AWS S3 FileSystem Provider for Java 7 (NIO2)</h2>
-        </header>
+    <section class="main-content">
+      <p>An <strong>Amazon AWS S3</strong> FileSystem Provider <strong>JSR-203</strong> for Java 7 (NIO2)</p>
 
-        <section id="downloads" class="clearfix">
-          <a href="https://github.com/jarnaiz/Amazon-S3-FileSystem-NIO2/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
-          <a href="https://github.com/jarnaiz/Amazon-S3-FileSystem-NIO2/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
-          <a href="https://github.com/jarnaiz/Amazon-S3-FileSystem-NIO2" id="view-on-github" class="button"><span>View on GitHub</span></a>
-        </section>
+<p>Amazon Simple Storage Service provides a fully redundant data storage infrastructure for storing and retrieving any amount of data, at any time.
+NIO2 is the new file management API, introduced in Java version 7. 
+This project provides a first API implementation, little optimized, but "complete" to manage files and folders directly on Amazon S3.</p>
 
-        <hr>
+<p><a href="https://travis-ci.org/Upplication/Amazon-S3-FileSystem-NIO2/builds"><img src="https://travis-ci.org/Upplication/Amazon-S3-FileSystem-NIO2.svg?branch=master" alt="Build Status"></a> <a href="https://coveralls.io/r/Upplication/Amazon-S3-FileSystem-NIO2?branch=master"><img src="https://coveralls.io/repos/Upplication/Amazon-S3-FileSystem-NIO2/badge.png?branch=master" alt="Coverage Status"></a> <a href="https://maven-badges.herokuapp.com/maven-central/com.upplication/s3fs"><img src="https://maven-badges.herokuapp.com/maven-central/com.upplication/s3fs/badge.svg" alt="Maven Central"></a></p>
 
-        <section id="main_content">
-          <p><strong>Amazon Simple Storage Service</strong> (S3) provides a fully redundant data storage infrastructure for storing and retrieving any amount of data, at any time.
-JSR-203, NIO2, is the new file management <strong>API</strong>, introduced in Java version 7. 
-This project provides a first API implementation, little optimized, but <strong>"complete"</strong> to manage files and folders directly on <strong>Amazon S3</strong>.</p>
+<h2>
+<a id="how-to-use" class="anchor" href="#how-to-use" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> How to use</h2>
 
-<p><strong>Features</strong>:</p>
+<h3>
+<a id="download-from-maven-central" class="anchor" href="#download-from-maven-central" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Download from Maven Central</h3>
+
+<div class="highlight highlight-text-xml"><pre>&lt;<span class="pl-ent">dependency</span>&gt;
+    &lt;<span class="pl-ent">groupId</span>&gt;com.upplication&lt;/<span class="pl-ent">groupId</span>&gt;
+    &lt;<span class="pl-ent">artifactId</span>&gt;s3fs&lt;/<span class="pl-ent">artifactId</span>&gt;
+    &lt;<span class="pl-ent">version</span>&gt;1.2.1&lt;/<span class="pl-ent">version</span>&gt;
+&lt;/<span class="pl-ent">dependency</span>&gt;</pre></div>
+
+<p>And add to your META-INF/services/java.nio.file.spi.FileSystemProvider (create if not exists yet) a new line like this: com.upplication.s3fs.S3FileSystemProvider.</p>
+
+<h3>
+<a id="s3filesystem-and-amazons3-settings" class="anchor" href="#s3filesystem-and-amazons3-settings" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>S3FileSystem and AmazonS3 settings</h3>
+
+<p>All settings for S3FileSystem and for the underlying AmazonS3 connector library can be set through System properties or environment variables.
+Possible settings can be found in com.upplication.s3fs.AmazonS3Factory.</p>
+
+<h3>
+<a id="using-service-locator-and-system-vars" class="anchor" href="#using-service-locator-and-system-vars" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> Using service locator and system vars</h3>
+
+<p>Check that s3fs_access_key and s3fs_secret_key system vars are present with the correct values to have full access to your amazon s3 bucket.</p>
+
+<p>Use this code to create the fileSystem and set to a concrete endpoint.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">FileSystems</span><span class="pl-k">.</span>newFileSystem(<span class="pl-s"><span class="pl-pds">"</span>s3:///<span class="pl-pds">"</span></span>, <span class="pl-k">new</span> <span class="pl-k">HashMap&lt;<span class="pl-smi">String</span>,<span class="pl-smi">Object</span>&gt;</span>(), <span class="pl-smi">Thread</span><span class="pl-k">.</span>currentThread()<span class="pl-k">.</span>getContextClassLoader());</pre></div>
+
+<h3>
+<a id="using-service-locator-and-amazonproperties-in-the-classpath" class="anchor" href="#using-service-locator-and-amazonproperties-in-the-classpath" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using service locator and amazon.properties in the classpath</h3>
+
+<p>Add to your resources folder the file amazon.properties with the content:
+s3fs_access_key=access key
+s3fs_secret_key=secret key</p>
+
+<p>Use this code to create the fileSystem and set to a concrete endpoint.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">FileSystems</span><span class="pl-k">.</span>newFileSystem(<span class="pl-s"><span class="pl-pds">"</span>s3:///<span class="pl-pds">"</span></span>, <span class="pl-k">new</span> <span class="pl-k">HashMap&lt;<span class="pl-smi">String</span>,<span class="pl-smi">Object</span>&gt;</span>(), <span class="pl-smi">Thread</span><span class="pl-k">.</span>currentThread()<span class="pl-k">.</span>getContextClassLoader());</pre></div>
+
+<h3>
+<a id="using-service-locator-and-programatically-authentication" class="anchor" href="#using-service-locator-and-programatically-authentication" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Using service locator and programatically authentication</h3>
+
+<p>Create a map with the authentication and use the fileSystem to create the fileSystem and set to a concrete endpoint.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">Map&lt;<span class="pl-smi">String</span>, ?&gt;</span> env <span class="pl-k">=</span> <span class="pl-smi">ImmutableMap</span><span class="pl-k">.</span><span class="pl-k">&lt;</span><span class="pl-smi">String</span>, <span class="pl-smi">Object</span><span class="pl-k">&gt;</span> builder()
+                .put(<span class="pl-smi">com.upplication.s3fs<span class="pl-k">.</span>AmazonS3Factory</span><span class="pl-c1"><span class="pl-k">.</span>ACCESS_KEY</span>, <span class="pl-s"><span class="pl-pds">"</span>access key<span class="pl-pds">"</span></span>)
+                .put(<span class="pl-smi">com.upplication.s3fs<span class="pl-k">.</span>AmazonS3Factory</span><span class="pl-c1"><span class="pl-k">.</span>SECRET_KEY</span>, <span class="pl-s"><span class="pl-pds">"</span>secret key<span class="pl-pds">"</span></span>)<span class="pl-k">.</span>build()
+<span class="pl-smi">FileSystems</span><span class="pl-k">.</span>newFileSystem(<span class="pl-s"><span class="pl-pds">"</span>s3:///<span class="pl-pds">"</span></span>, env, <span class="pl-smi">Thread</span><span class="pl-k">.</span>currentThread()<span class="pl-k">.</span>getContextClassLoader());</pre></div>
+
+<p>Complete settings lists:</p>
+
+<ul>
+<li>s3fs_access_key</li>
+<li>s3fs_secret_key</li>
+<li>s3fs_request_metric_collector_class</li>
+<li>s3fs_connection_timeout</li>
+<li>s3fs_max_connections</li>
+<li>s3fs_max_retry_error</li>
+<li>s3fs_protocol</li>
+<li>s3fs_proxy_domain</li>
+<li>s3fs_proxy_host</li>
+<li>s3fs_proxy_password</li>
+<li>s3fs_proxy_port</li>
+<li>s3fs_proxy_username</li>
+<li>s3fs_proxy_workstation</li>
+<li>s3fs_socket_send_buffer_size_hint</li>
+<li>s3fs_socket_receive_buffer_size_hint</li>
+<li>s3fs_socket_timeout</li>
+<li>s3fs_user_agent</li>
+<li>s3fs_amazon_s3_factory</li>
+</ul>
+
+<h3>
+<a id="set-endpoint-to-reduce-data-latency-in-your-applications" class="anchor" href="#set-endpoint-to-reduce-data-latency-in-your-applications" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Set endpoint to reduce data latency in your applications</h3>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-c">// Northern Virginia or Pacific Northwest</span>
+<span class="pl-smi">FileSystems</span><span class="pl-k">.</span>newFileSystem(<span class="pl-s"><span class="pl-pds">"</span>s3://s3.amazonaws.com/<span class="pl-pds">"</span></span>, env, <span class="pl-smi">Thread</span><span class="pl-k">.</span>currentThread()<span class="pl-k">.</span>getContextClassLoader());
+<span class="pl-c">// Northern Virginia only</span>
+<span class="pl-smi">FileSystems</span><span class="pl-k">.</span>newFileSystem(<span class="pl-s"><span class="pl-pds">"</span>s3://s3-external-1.amazonaws.com/<span class="pl-pds">"</span></span>, env, <span class="pl-smi">Thread</span><span class="pl-k">.</span>currentThread()<span class="pl-k">.</span>getContextClassLoader());
+<span class="pl-c">// US West (Oregon) Region</span>
+<span class="pl-smi">FileSystems</span><span class="pl-k">.</span>newFileSystem(<span class="pl-s"><span class="pl-pds">"</span>s3://s3-us-west-2.amazonaws.com/<span class="pl-pds">"</span></span>, env, <span class="pl-smi">Thread</span><span class="pl-k">.</span>currentThread()<span class="pl-k">.</span>getContextClassLoader());
+<span class="pl-c">// US West (Northern California) Region</span>
+<span class="pl-smi">FileSystems</span><span class="pl-k">.</span>newFileSystem(<span class="pl-s"><span class="pl-pds">"</span>s3://s3-us-west-1.amazonaws.com/<span class="pl-pds">"</span></span>, env, <span class="pl-smi">Thread</span><span class="pl-k">.</span>currentThread()<span class="pl-k">.</span>getContextClassLoader());
+<span class="pl-c">// EU (Ireland) Region</span>
+<span class="pl-smi">FileSystems</span><span class="pl-k">.</span>newFileSystem(<span class="pl-s"><span class="pl-pds">"</span>s3://s3-eu-west-1.amazonaws.com/<span class="pl-pds">"</span></span>, env, <span class="pl-smi">Thread</span><span class="pl-k">.</span>currentThread()<span class="pl-k">.</span>getContextClassLoader());</pre></div>
+
+<p>For a complete list of available regions look at: <a href="http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region">http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region</a></p>
+
+<h2>
+<a id="features" class="anchor" href="#features" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> Features:</h2>
 
 <ul>
 <li>Copy and create folders and files</li>
@@ -46,33 +125,58 @@ This project provides a first API implementation, little optimized, but <strong>
 <li>Copy paths between different providers</li>
 <li>Walk file tree</li>
 <li>Works with virtual s3 folders (not really exists and are element's subkeys)</li>
+<li>List buckets for the client</li>
+<li>Multi endpoint fileSystem</li>
 </ul>
 
-<p><strong>Roadmap</strong>:</p>
+<h2>
+<a id="roadmap" class="anchor" href="#roadmap" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Roadmap:</h2>
 
 <ul>
-<li>Performance issue (slow querys with virtual folders)</li>
-<li>Better test coverag)</li>
+<li>Performance issue (slow querys with virtual folders, add multipart submit...)</li>
 <li>Disallow upload binary files with same name as folders and vice versa</li>
-<li>Multi endpoint fileSystem (Actually one FileSystem at the same time)</li>
 </ul>
 
-<p><strong>Out of Roadmap</strong>:</p>
+<h2>
+<a id="out-of-roadmap" class="anchor" href="#out-of-roadmap" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> Out of Roadmap:</h2>
 
 <ul>
 <li>Watchers</li>
-<li>FileStore</li>
 </ul>
 
-<p>This project are forked the repository owned by martint <a href="https://github.com/martint/s3fs">https://github.com/martint/s3fs</a>. Thanks!</p>
-        </section>
+<h2>
+<a id="how-to-contribute" class="anchor" href="#how-to-contribute" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>How to contribute</h2>
 
-        <footer>
-          Amazon S3 API for Java 7 is maintained by <a href="https://github.com/jarnaiz">jarnaiz</a><br>
-          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="http://twitter.com/jasonlong">Jason Long</a>.
-        </footer>
+<p>Clone the github repository:</p>
 
-                  <script type="text/javascript">
+<div class="highlight highlight-source-java"><pre>git clone https<span class="pl-k">:</span><span class="pl-c">//github.com/Upplication/Amazon-S3-FileSystem-NIO2.git</span></pre></div>
+
+<p>To run the tests:</p>
+
+<p>First, you must copy the file <code>src/test/resources/amazon-test-sample.properties</code> and paste in the same directory with the name amazon-test.properties. In your copy you must edit all the keys:</p>
+
+<pre><code>bucket_name=/your-bucket-name for test
+# http://docs.aws.amazon.com/general/latest/gr/rande.html 
+s3fs_secret_key= your secret key for test
+s3fs_access_key=your access key for test
+</code></pre>
+
+<p>Thats all, now you can run the test with the command: <code>mvn test</code> or <code>mvn integration-test -Pintegration-tests</code></p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a> LICENSE:</h2>
+
+<p>Amazon S3 FileSystem NIO2 is released under the MIT License.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Upplication/Amazon-S3-FileSystem-NIO2">Amazon S3 API for Java 7</a> is maintained by <a href="https://github.com/Upplication">Upplication</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+            <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
           </script>
@@ -83,7 +187,5 @@ This project provides a first API implementation, little optimized, but <strong>
             } catch(err) {}
           </script>
 
-      </div>
-    </div>
   </body>
 </html>
