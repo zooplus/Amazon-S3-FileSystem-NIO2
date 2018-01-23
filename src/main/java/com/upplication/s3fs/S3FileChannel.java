@@ -19,12 +19,18 @@ import java.util.Set;
 
 import static java.lang.String.format;
 
+/**
+ * https://github.com/EMCECS/ecs-object-client-java/tree/master/src/main/java/com/emc/object/s3
+ */
 public class S3FileChannel extends FileChannel {
 
     private S3Path path;
     private Set<? extends OpenOption> options;
     private FileChannel filechannel;
     private Path tempFile;
+
+//    private final PipedInputStream input;
+//    private final PipedOutputStream output;
 
     public S3FileChannel(S3Path path, Set<? extends OpenOption> options) throws IOException {
         this.path = path;
