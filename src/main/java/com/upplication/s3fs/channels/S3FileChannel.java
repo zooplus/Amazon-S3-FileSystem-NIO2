@@ -1,11 +1,13 @@
-package com.upplication.s3fs;
+package com.upplication.s3fs.channels;
 
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.util.IOUtils;
+import com.upplication.s3fs.S3Path;
 import org.apache.tika.Tika;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -19,18 +21,12 @@ import java.util.Set;
 
 import static java.lang.String.format;
 
-/**
- * https://github.com/EMCECS/ecs-object-client-java/tree/master/src/main/java/com/emc/object/s3
- */
 public class S3FileChannel extends FileChannel {
 
     private S3Path path;
     private Set<? extends OpenOption> options;
     private FileChannel filechannel;
     private Path tempFile;
-
-//    private final PipedInputStream input;
-//    private final PipedOutputStream output;
 
     public S3FileChannel(S3Path path, Set<? extends OpenOption> options) throws IOException {
         this.path = path;
@@ -147,7 +143,7 @@ public class S3FileChannel extends FileChannel {
     }
 
     @Override
-    protected void implCloseChannel() throws IOException {
+    public void implCloseChannel() throws IOException {
         super.close();
         filechannel.close();
         if (!this.options.contains(StandardOpenOption.READ)) {

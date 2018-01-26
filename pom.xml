@@ -109,6 +109,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.github.akarnokd</groupId>
+			<artifactId>rxjava2-extensions</artifactId>
+			<version>0.18.5</version>
+		</dependency>
+
+		<dependency>
 			<groupId>com.github.davidmoten</groupId>
 			<artifactId>rxjava2-extras</artifactId>
 			<version>0.1.18</version>
