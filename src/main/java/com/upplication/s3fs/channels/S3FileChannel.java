@@ -157,15 +157,14 @@ public class S3FileChannel extends FileChannel {
      *
      * @throws IOException if the tempFile fails to open a newInputStream
      */
-    protected void sync() throws IOException {
-        try (InputStream stream = new BufferedInputStream(Files.newInputStream(tempFile))) {
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentLength(Files.size(tempFile));
-            metadata.setContentType(new Tika().detect(stream, path.getFileName().toString()));
-
-            String bucket = path.getFileStore().name();
-            String key = path.getKey();
-            path.getFileSystem().getClient().putObject(bucket, key, stream, metadata);
-        }
+    private void sync() throws IOException {
+        S3Uploader.builder()
+                .path(path)
+                .metadata(new ObjectMetadata())
+                .in(Files.newInputStream(tempFile))
+                .size(Files.size(tempFile))
+                .build()
+                .upload();
     }
+
 }

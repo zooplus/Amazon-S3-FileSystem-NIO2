@@ -28,22 +28,38 @@ public abstract class MultipartUploader<T> {
     private final BehaviorSubject<UploadingState> uploadState = BehaviorSubject.createDefault(WAITING_FOR_MORE_PARTS);
     private final Subject<Long> newBytes = ReplaySubject.create();
     private final Long partSizeInBytes = DEFAULT_PART_SIZE;
+    private Observable<Long> bytesInTotal;
 
-    public final Single<String> upload(Runnable completeHandler) {
-        monitorBytesIncoming();
+    public final Single<MultipartUploadSummary> upload(Runnable completeHandler) {
+        monitorBytesInTotal();
+        batchIncomingBytes();
         handleStateChanges();
         handleTransferStart();
         handleNewParts();
 //        handleUpdatedParts(); todo this might be necessary
+
         return Single.defer(() -> {
             completeHandler.run();
-            return Single.just(endTransfer());
+            final MultipartUploadSummary.MultipartUploadSummaryBuilder summaryBuilder = MultipartUploadSummary.builder()
+                    .bytesReceived(bytesInTotal.blockingLast());
+
+            if(canEndTransfer(uploadState.getValue())) {
+                String item = endTransfer();
+                summaryBuilder.performed(true);
+            } else {
+                summaryBuilder.performed(false);
+            }
+            return Single.just(summaryBuilder.build());
         });
     }
 
-    private void monitorBytesIncoming() {
-        changingParts.map(PartKey::getLength)
-                .scan(Long::sum)
+    private void monitorBytesInTotal() {
+        bytesInTotal = changingParts.map(PartKey::getLength)
+                .scan(Long::sum);
+    }
+
+    private void batchIncomingBytes() {
+        bytesInTotal
                 .map(bytes -> Double.valueOf(Math.floor(bytes / partSizeInBytes)).longValue())
                 .distinct() // only next multiplies of the part size
                 .skip(1) // skip the first one as this is effectively 0
@@ -143,12 +159,8 @@ public abstract class MultipartUploader<T> {
             return UPLOADING_PARTS == uploadingState;
         }
 
-        public static boolean isDone(UploadingState uploadingState) {
-            return false;
-        }
-
         public static boolean canEndTransfer(UploadingState uploadingState) {
-            return false;
+            return UPLOADING_PARTS == uploadingState;
         }
     }
 

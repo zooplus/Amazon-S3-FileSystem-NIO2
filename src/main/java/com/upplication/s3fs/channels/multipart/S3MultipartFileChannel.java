@@ -4,17 +4,17 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3Object;
 import com.github.davidmoten.guavamini.Sets;
 import com.upplication.s3fs.S3Path;
+import com.upplication.s3fs.channels.S3Uploader;
 import io.reactivex.Single;
 import io.reactivex.subjects.ReplaySubject;
 import io.reactivex.subjects.Subject;
+import lombok.SneakyThrows;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
+import java.nio.channels.*;
 import java.nio.file.*;
 import java.util.Collections;
 import java.util.HashSet;
@@ -28,13 +28,14 @@ public class S3MultipartFileChannel extends FileChannel {
     private final Set<? extends OpenOption> options;
     private final FileChannel backingFileChannel;
     private final Path backingFilePath;
-    private final S3MultipartUploader multipartUploader;
     private final Subject<PartKey> partKeySubject = ReplaySubject.create();
-
-    private final Single<String> uploadDone;
+    private final ObjectMetadata objectMetadata = new ObjectMetadata();
+    private final Single<MultipartUploadSummary> multipartUploadSummary;
+    private final S3Path path;
 
     public S3MultipartFileChannel(S3Path path, Set<? extends OpenOption> options) throws IOException {
         this.options = Collections.unmodifiableSet(new HashSet<>(options));
+        this.path = path;
         String key = path.getKey();
         boolean exists = path.getFileSystem().provider().exists(path);
 
@@ -60,15 +61,17 @@ public class S3MultipartFileChannel extends FileChannel {
             backingFileChannel = FileChannel.open(backingFilePath, fileChannelOptions);
             removeTempFile = false;
 
-            multipartUploader = S3MultipartUploader.builder()
+            multipartUploadSummary = S3MultipartUploader.builder()
                     .path(path)
                     .s3Client(path.getFileSystem().getClient())
-                    .objectMetadata(new ObjectMetadata())
+                    .objectMetadata(objectMetadata)
                     .changingParts(partKeySubject)
                     .uploadChannel(FileChannel.open(backingFilePath, Sets.newHashSet(READ)))
-                    .build();
-
-            uploadDone = multipartUploader.upload(partKeySubject::onComplete);
+                    .build()
+                    .upload(partKeySubject::onComplete);
+        } catch (Exception e) {
+            partKeySubject.onError(e);
+            throw new IllegalStateException(e);
         } finally {
             if (removeTempFile) {
                 Files.deleteIfExists(backingFilePath);
@@ -200,8 +203,19 @@ public class S3MultipartFileChannel extends FileChannel {
         Files.deleteIfExists(backingFilePath);
     }
 
+    @SneakyThrows
     private void completeUpload() {
-        uploadDone.blockingGet();
+        MultipartUploadSummary summary = multipartUploadSummary.blockingGet();
+        if (!summary.isPerformed()) {
+            InputStream in = Channels.newInputStream(FileChannel.open(backingFilePath, Sets.newHashSet(READ)));
+            S3Uploader.builder()
+                    .path(path)
+                    .metadata(objectMetadata)
+                    .in(in)
+                    .size(summary.getBytesReceived())
+                    .build()
+                    .upload();
+        }
     }
 
 }
