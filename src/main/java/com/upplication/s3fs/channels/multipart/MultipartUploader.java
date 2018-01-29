@@ -34,7 +34,7 @@ public abstract class MultipartUploader<T> {
         handleStateChanges();
         handleTransferStart();
         handleNewParts();
-//        handleUpdatedParts(); todo this might be necessary
+//        handleUpdatedParts();
 
         return Single.defer(() -> {
             completeHandler.run();
@@ -42,7 +42,7 @@ public abstract class MultipartUploader<T> {
                     .bytesReceived(bytesInTotal.blockingLast());
 
             if(canEndTransfer(uploadState.getValue())) {
-                String item = endTransfer();
+                endTransfer();
                 summaryBuilder.performed(true);
             } else {
                 summaryBuilder.performed(false);
@@ -97,7 +97,6 @@ public abstract class MultipartUploader<T> {
                 .doOnEach(part -> uploadState.onNext(UPLOADING_PARTS))
                 .filter(part -> managedParts.isEmpty() || part.isAfter(managedParts.lastKey()))
                 .map(part -> uploadNewPart(managedParts.size() + 1, part))
-                .subscribeOn(Schedulers.io())
                 .forEach(part -> managedParts.put(part.getKey(), part));
     }
 
@@ -109,7 +108,6 @@ public abstract class MultipartUploader<T> {
         )
                 .doOnEach(part -> uploadState.onNext(UPLOADING_PARTS))
                 .flatMap(this::gatherPartsToBeUpdated)
-                .subscribeOn(Schedulers.io())
                 .subscribe(partKey -> {
                     Part<T> part = reuploadPart(partKey);
                     managedParts.replace(partKey, part);
