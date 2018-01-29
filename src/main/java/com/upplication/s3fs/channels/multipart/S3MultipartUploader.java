@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.nio.channels.Channels.newInputStream;
@@ -32,8 +33,9 @@ public class S3MultipartUploader extends MultipartUploader<UploadPartResult> {
             ObjectMetadata objectMetadata,
             AmazonS3 s3Client,
             S3Path path,
-            FileChannel uploadChannel) {
-        super(changingParts);
+            FileChannel uploadChannel,
+            Long partSize) {
+        super(changingParts, partSize);
         this.objectMetadata = objectMetadata;
         this.s3Client = s3Client;
         this.path = path;

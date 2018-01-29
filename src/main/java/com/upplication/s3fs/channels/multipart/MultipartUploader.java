@@ -21,13 +21,11 @@ import static com.upplication.s3fs.channels.multipart.MultipartUploader.Uploadin
 @RequiredArgsConstructor
 public abstract class MultipartUploader<T> {
 
-    public static final long DEFAULT_PART_SIZE = 16 * 1024 * 1024; // 16MB
-
     private final Observable<PartKey> changingParts;
     private final SortedMap<PartKey, Part<T>> managedParts = new TreeMap<>();
     private final BehaviorSubject<UploadingState> uploadState = BehaviorSubject.createDefault(WAITING_FOR_MORE_PARTS);
     private final Subject<Long> newBytes = ReplaySubject.create();
-    private final Long partSizeInBytes = DEFAULT_PART_SIZE;
+    private final Long partSizeInBytes;
     private Observable<Long> bytesInTotal;
 
     public final Single<MultipartUploadSummary> upload(Runnable completeHandler) {

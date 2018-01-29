@@ -18,12 +18,16 @@ import java.nio.channels.*;
 import java.nio.file.*;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Properties;
 import java.util.Set;
 
+import static com.upplication.s3fs.AmazonS3Factory.MULTIPART_PART_SIZE;
 import static java.lang.String.format;
 import static java.nio.file.StandardOpenOption.READ;
 
 public class S3MultipartFileChannel extends FileChannel {
+
+    private static final long DEFAULT_PART_SIZE = 16 * 1024 * 1024; // 16MB
 
     private final Set<? extends OpenOption> options;
     private final FileChannel backingFileChannel;
@@ -33,7 +37,7 @@ public class S3MultipartFileChannel extends FileChannel {
     private final Single<MultipartUploadSummary> multipartUploadSummary;
     private final S3Path path;
 
-    public S3MultipartFileChannel(S3Path path, Set<? extends OpenOption> options) throws IOException {
+    public S3MultipartFileChannel(S3Path path, Set<? extends OpenOption> options, Properties properties) throws IOException {
         this.options = Collections.unmodifiableSet(new HashSet<>(options));
         this.path = path;
         String key = path.getKey();
@@ -67,8 +71,10 @@ public class S3MultipartFileChannel extends FileChannel {
                     .objectMetadata(objectMetadata)
                     .changingParts(partKeySubject)
                     .uploadChannel(FileChannel.open(backingFilePath, Sets.newHashSet(READ)))
+                    .partSize(Long.parseLong(properties.getProperty(MULTIPART_PART_SIZE, String.valueOf(DEFAULT_PART_SIZE))))
                     .build()
                     .upload(partKeySubject::onComplete);
+
         } catch (Exception e) {
             partKeySubject.onError(e);
             throw new IllegalStateException(e);
