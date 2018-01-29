@@ -27,7 +27,7 @@ import static java.nio.file.StandardOpenOption.READ;
 
 public class S3MultipartFileChannel extends FileChannel {
 
-    private static final long DEFAULT_PART_SIZE = 16 * 1024 * 1024; // 16MB
+    private static final long DEFAULT_PART_SIZE = 32 * 1024 * 1024; // 32MB
 
     private final Set<? extends OpenOption> options;
     private final FileChannel backingFileChannel;

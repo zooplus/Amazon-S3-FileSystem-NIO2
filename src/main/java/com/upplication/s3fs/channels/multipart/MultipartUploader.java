@@ -2,14 +2,12 @@ package com.upplication.s3fs.channels.multipart;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.ReplaySubject;
 import io.reactivex.subjects.Subject;
 import lombok.RequiredArgsConstructor;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.upplication.s3fs.channels.multipart.MultipartUploader.UploadingState.*;
 
@@ -30,8 +28,8 @@ public abstract class MultipartUploader<T> {
 
     public final Single<MultipartUploadSummary> upload(Runnable completeHandler) {
         monitorBytesInTotal();
+        handleStartingTransfer();
         batchIncomingBytes();
-        handleStateChanges();
         handleTransferStart();
         handleNewParts();
 
@@ -60,12 +58,16 @@ public abstract class MultipartUploader<T> {
                 .map(bytes -> Double.valueOf(Math.floor(bytes / partSizeInBytes)).longValue())
                 .distinct() // only next multiplies of the part size
                 .skip(1) // skip the first one as this is effectively 0
-                .subscribe(newBytes::onNext);
+                .doAfterNext((b) -> {
+                    newBytes.onNext(partSizeInBytes);
+                }).subscribe();
     }
 
-    private void handleStateChanges() {
+    private void handleStartingTransfer() {
         changingParts
+                .map(o -> o)
                 .buffer(newBytes)
+                .filter(parts -> parts.size() >= 2 && parts.stream().mapToDouble(PartKey::getLength).sum() >= partSizeInBytes)
                 .firstElement()
                 .subscribe((e) -> uploadState.onNext(READY_TO_START));
     }

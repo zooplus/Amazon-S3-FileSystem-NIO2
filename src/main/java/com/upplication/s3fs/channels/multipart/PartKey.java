@@ -16,10 +16,6 @@ public class PartKey implements Comparable<PartKey> {
         return this.end > partKey.end;
     }
 
-    public boolean overlapsWith(PartKey partKey) {
-        return this.end < partKey.start || this.start > partKey.end;
-    }
-
     public long getLength() {
         return end - start;
     }
@@ -29,10 +25,6 @@ public class PartKey implements Comparable<PartKey> {
         if(equals(o)) return 0;
         else if(isAfter(o)) return 1;
         else return -1;
-    }
-
-    public static PartKey zero() {
-        return new PartKey(0, 0);
     }
 
     public PartKey unionWith(PartKey otherPart) {
