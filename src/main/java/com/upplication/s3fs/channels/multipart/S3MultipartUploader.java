@@ -63,15 +63,6 @@ public class S3MultipartUploader extends MultipartUploader<UploadPartResult> {
     }
 
     @Override
-    protected Part<UploadPartResult> reuploadPart(PartKey partKey) {
-        Part<UploadPartResult> uploadPartResultPart = getManagedParts().get(partKey);
-        UploadPartResult uploadPartResult = s3Client.uploadPart(
-                anUploadPartRequest(uploadPartResultPart.getNumber(), partKey)
-        );
-        return new Part<>(partKey, uploadPartResultPart.getNumber(), uploadPartResult);
-    }
-
-    @Override
     protected String endTransfer() {
         final List<PartETag> partEtags = getManagedParts().values().stream()
                 .map(Part::getValue)

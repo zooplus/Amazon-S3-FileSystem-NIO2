@@ -34,7 +34,6 @@ public abstract class MultipartUploader<T> {
         handleStateChanges();
         handleTransferStart();
         handleNewParts();
-//        handleUpdatedParts();
 
         return Single.defer(() -> {
             completeHandler.run();
@@ -100,28 +99,6 @@ public abstract class MultipartUploader<T> {
                 .forEach(part -> managedParts.put(part.getKey(), part));
     }
 
-    private void handleUpdatedParts() {
-        Observable.zip(
-                uploadState.filter(UploadingState::canUploadUpdatedParts),
-                changingParts,
-                (a, b) -> b
-        )
-                .doOnEach(part -> uploadState.onNext(UPLOADING_PARTS))
-                .flatMap(this::gatherPartsToBeUpdated)
-                .subscribe(partKey -> {
-                    Part<T> part = reuploadPart(partKey);
-                    managedParts.replace(partKey, part);
-                });
-    }
-
-    private Observable<PartKey> gatherPartsToBeUpdated(PartKey updatedPart) {
-        return Observable.fromIterable(managedParts.keySet()
-                .stream()
-                .filter(managedPart -> managedPart != updatedPart) // this is intentional, if it is the same part then do not attempt to upload
-                .filter(managedPart -> managedPart.overlapsWith(updatedPart))
-                .collect(Collectors.toList()));
-    }
-
     protected Map<PartKey, Part<T>> getManagedParts() {
         return Collections.unmodifiableMap(managedParts);
     }
@@ -133,8 +110,6 @@ public abstract class MultipartUploader<T> {
     protected abstract void startTransfer(List<PartKey> object);
 
     protected abstract Part<T> uploadNewPart(int partId, PartKey partKey);
-
-    protected abstract Part<T> reuploadPart(PartKey partKey);
 
     protected abstract String endTransfer();
 
