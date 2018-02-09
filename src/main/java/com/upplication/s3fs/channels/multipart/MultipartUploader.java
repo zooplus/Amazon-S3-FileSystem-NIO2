@@ -38,7 +38,7 @@ public abstract class MultipartUploader<T> {
             final MultipartUploadSummary.MultipartUploadSummaryBuilder summaryBuilder = MultipartUploadSummary.builder()
                     .bytesReceived(bytesInTotal.blockingLast());
 
-            if(canEndTransfer(uploadState.getValue())) {
+            if (canEndTransfer(uploadState.getValue())) {
                 endTransfer();
                 summaryBuilder.performed(true);
             } else {

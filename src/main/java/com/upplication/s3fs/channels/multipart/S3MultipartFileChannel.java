@@ -37,6 +37,9 @@ public class S3MultipartFileChannel extends FileChannel {
     private final Single<MultipartUploadSummary> multipartUploadSummary;
     private final S3Path path;
 
+    private S3Object downloadObject;
+    private ReadableByteChannel downloadChannel;
+
     public S3MultipartFileChannel(S3Path path, Set<? extends OpenOption> options, Properties properties) throws IOException {
         this.options = Collections.unmodifiableSet(new HashSet<>(options));
         this.path = path;
@@ -52,29 +55,27 @@ public class S3MultipartFileChannel extends FileChannel {
         backingFilePath = Files.createTempFile("temp-s3-", key.replaceAll("/", "_"));
         boolean removeTempFile = true;
         try {
-            if (exists) {
-                try (S3Object object = path.getFileSystem()
-                        .getClient()
-                        .getObject(path.getFileStore().getBucket().getName(), key)) {
-                    Files.copy(object.getObjectContent(), backingFilePath, StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
 
             Set<? extends OpenOption> fileChannelOptions = new HashSet<>(this.options);
             fileChannelOptions.remove(StandardOpenOption.CREATE_NEW);
             backingFileChannel = FileChannel.open(backingFilePath, fileChannelOptions);
+
             removeTempFile = false;
 
-            multipartUploadSummary = S3MultipartUploader.builder()
-                    .path(path)
-                    .s3Client(path.getFileSystem().getClient())
-                    .objectMetadata(objectMetadata)
-                    .changingParts(partKeySubject)
-                    .uploadChannel(FileChannel.open(backingFilePath, Sets.newHashSet(READ)))
-                    .partSize(Long.parseLong(properties.getProperty(MULTIPART_PART_SIZE, String.valueOf(DEFAULT_PART_SIZE))))
-                    .build()
-                    .upload(partKeySubject::onComplete);
-
+            if (exists) {
+                createDownloadChannel(path, key);
+                multipartUploadSummary = null;
+            } else {
+                multipartUploadSummary = S3MultipartUploader.builder()
+                        .path(path)
+                        .s3Client(path.getFileSystem().getClient())
+                        .objectMetadata(objectMetadata)
+                        .changingParts(partKeySubject)
+                        .uploadChannel(FileChannel.open(backingFilePath, Sets.newHashSet(READ)))
+                        .partSize(Long.parseLong(properties.getProperty(MULTIPART_PART_SIZE, String.valueOf(DEFAULT_PART_SIZE))))
+                        .build()
+                        .upload(partKeySubject::onComplete);
+            }
         } catch (Exception e) {
             partKeySubject.onError(e);
             throw new IllegalStateException(e);
@@ -85,14 +86,26 @@ public class S3MultipartFileChannel extends FileChannel {
         }
     }
 
-    @Override
-    public int read(ByteBuffer dst) throws IOException {
-        return backingFileChannel.read(dst);
+    private void createDownloadChannel(S3Path path, String key) {
+        downloadObject = path.getFileSystem()
+                .getClient()
+                .getObject(path.getFileStore().getBucket().getName(), key);
+        downloadChannel = Channels.newChannel(downloadObject.getObjectContent());
     }
 
     @Override
-    public long read(ByteBuffer[] dsts, int offset, int length) throws IOException {
-        return backingFileChannel.read(dsts, offset, length);
+    public int read(ByteBuffer dst) throws IOException {
+        return downloadChannel.read(dst);
+    }
+
+    @Override
+    public int read(ByteBuffer dst, long position) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public long read(ByteBuffer[] dsts, int offset, int length) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -130,7 +143,7 @@ public class S3MultipartFileChannel extends FileChannel {
 
     @Override
     public FileChannel position(long newPosition) throws IOException {
-        backingFileChannel.position(position());
+        backingFileChannel.position(newPosition);
         return this;
     }
 
@@ -141,8 +154,8 @@ public class S3MultipartFileChannel extends FileChannel {
 
     @Override
     public FileChannel truncate(long size) throws IOException {
-//        long oldSize = backingFileChannel.size();
-        return backingFileChannel.truncate(size);
+        backingFileChannel.truncate(size);
+        return this;
     }
 
     @Override
@@ -165,11 +178,6 @@ public class S3MultipartFileChannel extends FileChannel {
                         .build()
         );
         return bytesWritten;
-    }
-
-    @Override
-    public int read(ByteBuffer dst, long position) throws IOException {
-        return backingFileChannel.read(dst, position);
     }
 
     @Override
@@ -206,6 +214,9 @@ public class S3MultipartFileChannel extends FileChannel {
         }
         super.close();
         backingFileChannel.close();
+        if (downloadObject != null) {
+            downloadObject.close();
+        }
         Files.deleteIfExists(backingFilePath);
     }
 
