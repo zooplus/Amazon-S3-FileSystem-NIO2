@@ -52,7 +52,7 @@ public class S3MultipartFileChannel extends FileChannel {
                 !this.options.contains(StandardOpenOption.CREATE))
             throw new NoSuchFileException(format("target not exists: %s", path));
 
-        backingFilePath = Files.createTempFile("temp-s3-", key.replaceAll("/", "_"));
+        backingFilePath = Files.createTempFile("temp-s3-", key.replaceAll("[^a-zA-Z0-9.-]", "_"));
         boolean removeTempFile = true;
         try {
 
