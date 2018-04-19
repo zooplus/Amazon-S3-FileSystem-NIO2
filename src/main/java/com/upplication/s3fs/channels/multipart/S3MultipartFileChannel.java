@@ -62,7 +62,7 @@ public class S3MultipartFileChannel extends FileChannel {
 
             removeTempFile = false;
 
-            if (exists) {
+            if (exists && options.contains(StandardOpenOption.READ)) {
                 createDownloadChannel(path, key);
                 multipartUploadSummary = null;
             } else {
