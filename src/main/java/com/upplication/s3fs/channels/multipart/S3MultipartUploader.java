@@ -13,7 +13,6 @@ import java.io.IOException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static java.nio.channels.Channels.newInputStream;
@@ -60,7 +59,7 @@ public class S3MultipartUploader extends MultipartUploader<UploadPartResult> {
     @Override
     protected Part<UploadPartResult> uploadNewPart(int partNo, PartKey partKey) {
         UploadPartResult uploadPartResult = s3Client.uploadPart(anUploadPartRequest(partNo, partKey));
-        log.info("uploading file:" + path.toString() + " part No: "+ partNo+" uploaded " + partKey.getLength());
+        log.info("uploading file:" + path.toString() + " part No: " + partNo + " uploaded " + partKey.getLength());
         return new Part<>(partKey, partNo, uploadPartResult);
     }
 
