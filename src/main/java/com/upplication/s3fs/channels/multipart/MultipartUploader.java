@@ -36,7 +36,7 @@ public abstract class MultipartUploader<T> {
         return Single.defer(() -> {
             completeHandler.run();
             final MultipartUploadSummary.MultipartUploadSummaryBuilder summaryBuilder = MultipartUploadSummary.builder()
-                    .bytesReceived(bytesInTotal.blockingLast());
+                    .bytesReceived(bytesInTotal.blockingLast(0L));
 
             if (canEndTransfer(uploadState.getValue())) {
                 endTransfer();
@@ -106,7 +106,10 @@ public abstract class MultipartUploader<T> {
     }
 
     private Observable<PartKey> mergeParts(List<PartKey> partKeys) {
-        return Observable.just(partKeys.stream().reduce(partKeys.iterator().next(), PartKey::unionWith));
+        if (partKeys.iterator().hasNext()) {
+            return Observable.just(partKeys.stream().reduce(partKeys.iterator().next(), PartKey::unionWith));
+        }
+        return  Observable.just(PartKey.builder().start(0).length(0).build());
     }
 
     protected abstract void startTransfer(List<PartKey> object);
