@@ -14,8 +14,8 @@ import com.upplication.s3fs.attribute.S3BasicFileAttributeView;
 import com.upplication.s3fs.attribute.S3BasicFileAttributes;
 import com.upplication.s3fs.attribute.S3PosixFileAttributeView;
 import com.upplication.s3fs.attribute.S3PosixFileAttributes;
-import com.upplication.s3fs.channels.multipart.S3MultipartFileChannel;
 import com.upplication.s3fs.channels.S3SeekableByteChannel;
+import com.upplication.s3fs.channels.multipart.S3MultipartFileChannel;
 import com.upplication.s3fs.util.AttributesUtils;
 import com.upplication.s3fs.util.Cache;
 import com.upplication.s3fs.util.S3Utils;
@@ -328,8 +328,7 @@ public class S3FileSystemProvider extends FileSystemProvider {
         Preconditions.checkArgument(options.length == 0, "OpenOptions not yet supported: %s", ImmutableList.copyOf(options)); // TODO
         Preconditions.checkArgument(!key.equals(""), "cannot create InputStream for root directory: %s", path);
 
-        try {
-            S3Object object = s3Path.getFileSystem().getClient().getObject(s3Path.getFileStore().name(), key);
+        try (S3Object object = s3Path.getFileSystem().getClient().getObject(s3Path.getFileStore().name(), key)) {
             InputStream res = object.getObjectContent();
 
             if (res == null)
