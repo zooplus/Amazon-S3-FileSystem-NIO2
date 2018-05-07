@@ -5,18 +5,20 @@ import com.amazonaws.services.s3.model.*;
 import com.upplication.s3fs.S3Path;
 import io.reactivex.Observable;
 import lombok.Builder;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.tika.Tika;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.nio.MappedByteBuffer;
+import java.io.InputStream;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static java.nio.channels.Channels.newInputStream;
-import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
+import static org.apache.commons.io.IOUtils.read;
+
 @Slf4j
 public class S3MultipartUploader extends MultipartUploader<UploadPartResult> {
 
@@ -58,8 +60,11 @@ public class S3MultipartUploader extends MultipartUploader<UploadPartResult> {
 
     @Override
     protected Part<UploadPartResult> uploadNewPart(int partNo, PartKey partKey) {
-        UploadPartResult uploadPartResult = s3Client.uploadPart(anUploadPartRequest(partNo, partKey));
-        log.info("uploading file:" + path.toString() + " part No: " + partNo + " uploaded " + partKey.getLength());
+        UploadPartResult uploadPartResult = s3Client.uploadPart(uploadPartRequest(partNo, partKey));
+        log.info("Uploading file: {}, Part No: {}, Part Length: {}",
+                path.toString(),
+                partNo,
+                partKey.getLength());
         return new Part<>(partKey, partNo, uploadPartResult);
     }
 
@@ -77,23 +82,37 @@ public class S3MultipartUploader extends MultipartUploader<UploadPartResult> {
                         bucket,
                         key,
                         uploadId,
-                        partEtags
-                )
-        ).getETag();
+                        partEtags)).getETag();
     }
 
-    @SneakyThrows
-    private UploadPartRequest anUploadPartRequest(int partId, PartKey partKey) {
+    private UploadPartRequest uploadPartRequest(int partId, PartKey partKey) {
         final String bucket = path.getFileStore().name();
         final String key = path.getKey();
-        MappedByteBuffer bytesToWrite = uploadChannel.map(READ_ONLY, partKey.getStart(), partKey.getLength());
+
         return new UploadPartRequest()
-                .withUploadId(uploadId)
-                .withPartNumber(partId)
-                .withPartSize(partKey.getLength())
-                .withInputStream(new ByteBufferInputStream(bytesToWrite))
-                .withBucketName(bucket)
-                .withKey(key);
+                    .withUploadId(uploadId)
+                    .withPartNumber(partId)
+                    .withPartSize(partKey.getLength())
+                    .withInputStream(asInputStream(uploadChannel, partKey))
+                    .withBucketName(bucket)
+                    .withKey(key);
+    }
+
+    private InputStream asInputStream(FileChannel fileChannel, PartKey partKey) {
+        int partOffset = partKey.startAsInt();
+        int partLength = partKey.lengthAsInt();
+
+        try {
+            // Not being closed intentionally, as it will be closed with the channel
+            InputStream channelStream = newInputStream(fileChannel.position(partKey.getStart()));
+            byte[] buffer = new byte[partOffset + partLength];
+            read(channelStream, buffer, partOffset, partLength);
+
+            return new ByteArrayInputStream(buffer, partOffset, partLength);
+        } catch (IOException e) {
+            log.error("Failed to upload file part", e);
+            throw new RuntimeException(e);
+        }
     }
 
 }

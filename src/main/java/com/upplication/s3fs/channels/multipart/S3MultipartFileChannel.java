@@ -8,7 +8,7 @@ import com.upplication.s3fs.channels.S3Uploader;
 import io.reactivex.Single;
 import io.reactivex.subjects.ReplaySubject;
 import io.reactivex.subjects.Subject;
-import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -23,8 +23,10 @@ import java.util.Set;
 
 import static com.upplication.s3fs.AmazonS3Factory.MULTIPART_PART_SIZE;
 import static java.lang.String.format;
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
 import static java.nio.file.StandardOpenOption.READ;
 
+@Slf4j
 public class S3MultipartFileChannel extends FileChannel {
 
     private static final long DEFAULT_PART_SIZE = 32 * 1024 * 1024; // 32MB
@@ -46,9 +48,9 @@ public class S3MultipartFileChannel extends FileChannel {
         String key = path.getKey();
         boolean exists = path.getFileSystem().provider().exists(path);
 
-        if (exists && this.options.contains(StandardOpenOption.CREATE_NEW))
+        if (exists && this.options.contains(CREATE_NEW))
             throw new FileAlreadyExistsException(format("target already exists: %s", path));
-        else if (!exists && !this.options.contains(StandardOpenOption.CREATE_NEW) &&
+        else if (!exists && !this.options.contains(CREATE_NEW) &&
                 !this.options.contains(StandardOpenOption.CREATE))
             throw new NoSuchFileException(format("target not exists: %s", path));
 
@@ -56,13 +58,14 @@ public class S3MultipartFileChannel extends FileChannel {
         boolean removeTempFile = true;
         try {
 
-            Set<? extends OpenOption> fileChannelOptions = new HashSet<>(this.options);
-            fileChannelOptions.remove(StandardOpenOption.CREATE_NEW);
+            Set<OpenOption> fileChannelOptions = new HashSet<>(this.options);
+            fileChannelOptions.remove(CREATE_NEW);
+            fileChannelOptions.add(READ);
             backingFileChannel = FileChannel.open(backingFilePath, fileChannelOptions);
 
             removeTempFile = false;
 
-            if (exists && options.contains(StandardOpenOption.READ)) {
+            if (exists && options.contains(READ)) {
                 createDownloadChannel(path, key);
                 multipartUploadSummary = null;
             } else {
@@ -71,7 +74,7 @@ public class S3MultipartFileChannel extends FileChannel {
                         .s3Client(path.getFileSystem().getClient())
                         .objectMetadata(objectMetadata)
                         .changingParts(partKeySubject)
-                        .uploadChannel(FileChannel.open(backingFilePath, Sets.newHashSet(READ)))
+                        .uploadChannel(backingFileChannel)
                         .partSize(Long.parseLong(properties.getProperty(MULTIPART_PART_SIZE, String.valueOf(DEFAULT_PART_SIZE))))
                         .build()
                         .upload(partKeySubject::onComplete);
@@ -220,18 +223,21 @@ public class S3MultipartFileChannel extends FileChannel {
         Files.deleteIfExists(backingFilePath);
     }
 
-    @SneakyThrows
     private void completeUpload() {
         MultipartUploadSummary summary = multipartUploadSummary.blockingGet();
         if (!summary.isPerformed()) {
-            InputStream in = Channels.newInputStream(FileChannel.open(backingFilePath, Sets.newHashSet(READ)));
-            S3Uploader.builder()
-                    .path(path)
-                    .metadata(objectMetadata)
-                    .in(in)
-                    .size(summary.getBytesReceived())
-                    .build()
-                    .upload();
+            try (InputStream in = Channels.newInputStream(FileChannel.open(backingFilePath, Sets.newHashSet(READ)))) {
+                S3Uploader.builder()
+                        .path(path)
+                        .metadata(objectMetadata)
+                        .in(in)
+                        .size(summary.getBytesReceived())
+                        .build()
+                        .upload();
+            } catch (IOException e) {
+                log.error("Failed to complete upload", e);
+                throw new RuntimeException(e);
+            }
         }
     }
 

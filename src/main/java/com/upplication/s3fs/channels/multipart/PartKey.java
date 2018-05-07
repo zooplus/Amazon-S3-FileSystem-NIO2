@@ -12,6 +12,13 @@ public class PartKey implements Comparable<PartKey> {
         return new PartKeyBuilder();
     }
 
+    @Override
+    public int compareTo(PartKey o) {
+        if(equals(o)) return 0;
+        else if(isAfter(o)) return 1;
+        else return -1;
+    }
+
     public boolean isAfter(PartKey partKey) {
         return this.end > partKey.end;
     }
@@ -20,12 +27,14 @@ public class PartKey implements Comparable<PartKey> {
         return end - start;
     }
 
-    @Override
-    public int compareTo(PartKey o) {
-        if(equals(o)) return 0;
-        else if(isAfter(o)) return 1;
-        else return -1;
+    public int startAsInt() {
+        return Math.toIntExact(start);
     }
+
+    public int lengthAsInt() {
+        return Math.toIntExact(getLength());
+    }
+
 
     public PartKey unionWith(PartKey otherPart) {
         return new PartKey(Math.min(start, otherPart.start), Math.max(end, otherPart.end));
