@@ -1,15 +1,14 @@
 package com.upplication.s3fs;
 
-import static java.lang.String.format;
+import com.amazonaws.services.s3.model.AccessControlList;
+import com.amazonaws.services.s3.model.Owner;
+import com.amazonaws.services.s3.model.Permission;
 
 import java.nio.file.AccessDeniedException;
 import java.nio.file.AccessMode;
 import java.util.EnumSet;
 
-import com.amazonaws.services.s3.model.AccessControlList;
-import com.amazonaws.services.s3.model.Grant;
-import com.amazonaws.services.s3.model.Owner;
-import com.amazonaws.services.s3.model.Permission;
+import static java.lang.String.format;
 
 public class S3AccessControlList {
     private String fileStoreName;
@@ -29,16 +28,23 @@ public class S3AccessControlList {
     }
 
     /**
-     * have almost one of the permission set in the parameter permissions
+     * Intentionally commented out, to enable inter accounts S3 operations on AWS.
+     * In case the requesting party is not the owner of the S3 object,
+     * this check will fail, which we actually want to explicitly avoid.
      *
-     * @param permissions almost one
+     * Have at least one of the permission set in the parameter permissions
+     *
+     * @param permissions at least one
      * @return
      */
     private boolean hasPermission(EnumSet<Permission> permissions) {
-        for (Grant grant : acl.getGrantsAsList())
-            if (grant.getGrantee().getIdentifier().equals(owner.getId()) && permissions.contains(grant.getPermission()))
-                return true;
-        return false;
+//        for (Grant grant : acl.getGrantsAsList()) {
+//            if (grant.getGrantee().getIdentifier().equals(owner.getId()) && permissions.contains(grant.getPermission())) {
+//                return true;
+//            }
+//        }
+//        return false;
+        return true;
     }
 
     public void checkAccess(AccessMode[] modes) throws AccessDeniedException {

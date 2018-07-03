@@ -1,15 +1,20 @@
 package com.upplication.s3fs;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.AccessControlList;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.Owner;
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.nio.file.FileStore;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.FileStoreAttributeView;
+import java.util.Date;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.Owner;
-import com.google.common.collect.ImmutableList;
+import static java.util.Objects.isNull;
 
+@Slf4j
 public class S3FileStore extends FileStore implements Comparable<S3FileStore> {
 
     private S3FileSystem fileSystem;
@@ -84,10 +89,28 @@ public class S3FileStore extends FileStore implements Comparable<S3FileStore> {
     }
 
     private Bucket getBucket(String bucketName) {
-        for (Bucket buck : getClient().listBuckets())
-            if (buck.getName().equals(bucketName))
+        for (Bucket buck : getClient().listBuckets()) {
+            if (buck.getName().equals(bucketName)) {
                 return buck;
-        return null;
+            }
+        }
+
+        return getOtherAwsAccountBucket(bucketName);
+    }
+
+    private Bucket getOtherAwsAccountBucket(String bucketName) {
+        AccessControlList bucketAcl = getClient().getBucketAcl(bucketName);
+
+        if (isNull(bucketAcl)) {
+            log.error("Getting the bucket from other AWS account failed for bucket [{}]", bucketName);
+            throw new IllegalArgumentException("Failed to get the bucket");
+        }
+
+        Bucket bucket = new Bucket(bucketName);
+        bucket.setOwner(bucketAcl.getOwner());
+        bucket.setCreationDate(new Date());
+
+        return bucket;
     }
 
     public S3Path getRootDirectory() {

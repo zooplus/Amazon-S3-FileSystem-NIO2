@@ -513,6 +513,11 @@ public class AmazonS3ClientMock extends AbstractAmazonS3 {
             }
         };
 
+        if (elem.endsWith(bucketName)) {
+            grantBucketAclPermissions(grant, res);
+            return  res;
+        }
+
         try {
             Set<PosixFilePermission> permission = Files.readAttributes(elem, PosixFileAttributes.class).permissions();
             for (PosixFilePermission posixFilePermission : permission) {
@@ -533,7 +538,6 @@ public class AmazonS3ClientMock extends AbstractAmazonS3 {
                         res.grantPermission(grant, Permission.WriteAcp);
                         res.grantPermission(grant, Permission.ReadAcp);
                         break;
-
                 }
             }
         }catch (IOException e) {
@@ -541,6 +545,12 @@ public class AmazonS3ClientMock extends AbstractAmazonS3 {
         }
 
         return res;
+    }
+
+    private void grantBucketAclPermissions(Grantee grantee, AccessControlList acl) {
+        acl.grantPermission(grantee, Permission.Read);
+        acl.grantPermission(grantee, Permission.Write);
+        acl.grantPermission(grantee, Permission.FullControl);
     }
 
     private AccessControlList createAllPermission(String bucketName) {

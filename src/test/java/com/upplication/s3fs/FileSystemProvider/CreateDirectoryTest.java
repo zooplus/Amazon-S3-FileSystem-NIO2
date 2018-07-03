@@ -8,6 +8,7 @@ import com.upplication.s3fs.util.AmazonS3ClientMock;
 import com.upplication.s3fs.util.AmazonS3MockFactory;
 import com.upplication.s3fs.util.S3EndpointConstant;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -41,6 +42,13 @@ public class CreateDirectoryTest extends S3UnitTestBase {
     }
 
 
+    /**
+     * Test case ignored because creating a new bucket shouldn't be permitted in our case
+     * due to the limitations of Cloud Containers, and inter-accounts policies.
+     *
+     * @throws IOException
+     */
+    @Ignore
     @Test
     public void createDirectoryInNewBucket() throws IOException {
         S3Path root = createNewS3FileSystem().getPath("/newer-bucket");
