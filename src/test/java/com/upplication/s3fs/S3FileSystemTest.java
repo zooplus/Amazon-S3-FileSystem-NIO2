@@ -319,11 +319,14 @@ public class S3FileSystemTest extends S3UnitTestBase {
 
     @Test
     public void createDirectory() throws IOException {
+        String bucketName = "bucket";
         S3FileSystemProvider provider = new S3FileSystemProvider();
         AmazonS3ClientMock amazonClientMock = AmazonS3MockFactory.getAmazonClientMock();
+        amazonClientMock.bucket(bucketName);
+
         S3FileSystem s3fs = new S3FileSystem(provider, null, amazonClientMock, "mirror1.amazon.test");
         try {
-            S3Path folder = s3fs.getPath("/bucket", "folder");
+            S3Path folder = s3fs.getPath("/".concat(bucketName), "folder");
             provider.createDirectory(folder);
             assertTrue(Files.exists(folder));
         } finally {
