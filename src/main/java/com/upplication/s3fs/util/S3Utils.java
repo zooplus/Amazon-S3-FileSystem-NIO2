@@ -104,8 +104,7 @@ public class S3Utils {
 
             userPrincipal = new S3UserPrincipal(owner.getId() + ":" + owner.getDisplayName());
             permissions = toPosixFilePermissions(acl.getGrantsAsList());
-        }
-        else {
+        } else {
             permissions =  toPosixFilePermission(Permission.FullControl);
         }
 
