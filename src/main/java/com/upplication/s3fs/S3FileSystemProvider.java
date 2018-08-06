@@ -328,7 +328,8 @@ public class S3FileSystemProvider extends FileSystemProvider {
         Preconditions.checkArgument(options.length == 0, "OpenOptions not yet supported: %s", ImmutableList.copyOf(options)); // TODO
         Preconditions.checkArgument(!key.equals(""), "cannot create InputStream for root directory: %s", path);
 
-        try (S3Object object = s3Path.getFileSystem().getClient().getObject(s3Path.getFileStore().name(), key)) {
+        try {
+            S3Object object = s3Path.getFileSystem().getClient().getObject(s3Path.getFileStore().name(), key);
             InputStream res = object.getObjectContent();
 
             if (res == null)
