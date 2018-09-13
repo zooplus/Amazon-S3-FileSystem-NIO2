@@ -602,7 +602,7 @@ public class S3Path implements Path {
      */
     private String decode(URI uri) {
         try {
-            return URLDecoder.decode(uri.toString(), "UTF-8");
+            return URLDecoder.decode(uri.toString().replaceAll("\\+", "%2b"), "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Error decoding key: " + this.uri, e);
         }
