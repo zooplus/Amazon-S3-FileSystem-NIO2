@@ -8,16 +8,24 @@ import com.upplication.s3fs.S3Path;
 import com.upplication.s3fs.attribute.S3BasicFileAttributes;
 import com.upplication.s3fs.attribute.S3PosixFileAttributes;
 import com.upplication.s3fs.attribute.S3UserPrincipal;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.http.HttpStatus;
 
+import java.io.FileNotFoundException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.attribute.FileTime;
 import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import static com.amazonaws.util.CollectionUtils.isNullOrEmpty;
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 /**
  * Utilities to work with Amazon S3 Objects.
  */
+@Slf4j
 public class S3Utils {
 
     /**
@@ -25,61 +33,64 @@ public class S3Utils {
      *
      * @param s3Path {@link S3Path}
      * @return {@link S3ObjectSummary}
-     * @throws NoSuchFileException if not found the path and any child
      */
     public S3ObjectSummary getS3ObjectSummary(S3Path s3Path) throws NoSuchFileException {
         String key = s3Path.getKey();
         String bucketName = s3Path.getFileStore().name();
-        AmazonS3 client = s3Path.getFileSystem().getClient();
-        return S3ObjectSummaryCache.INSTANCE.getOrPutIfDirectory(key, () -> {
-            S3ObjectSummary result = new S3ObjectSummary();
-            result.setBucketName(bucketName);
-            result.setKey(key);
-            result.setLastModified(new Date());
-            result.setSize(19);
-            result.setETag("24216c7158d8b6b513369b933fbbc3cb");
-            //AccessControlList objectAcl = client.getObjectAcl(bucketName, key);
-            result.setOwner(new Owner("asdf", "asdf")); //(objectAcl.getOwner());
-            return result;
-        }).orElseGet(() -> {
-            try {
-                ObjectMetadata metadata = client.getObjectMetadata(bucketName, key);
-                S3ObjectSummary result = new S3ObjectSummary();
-                result.setBucketName(bucketName);
-                result.setETag(metadata.getETag());
-                result.setKey(key);
-                result.setLastModified(metadata.getLastModified());
-                result.setSize(metadata.getContentLength());
-                AccessControlList objectAcl = client.getObjectAcl(bucketName, key);
-                result.setOwner(objectAcl.getOwner());
-                return result;
-            } catch (AmazonS3Exception e) {
-                if (e.getStatusCode() != 404)
-                    throw e;
-            }
+        try {
+            return S3ObjectSummaryCache.INSTANCE.getOrCacheDirectory(key)
+                    .orElseGet(() -> getFileSummary(s3Path, bucketName, key)
 
-            // if not found (404 err) with the original key.
-            // try to find the elment as a directory.
-            try {
-                // is a virtual directory
-                ListObjectsRequest request = new ListObjectsRequest();
-                request.setBucketName(bucketName);
-                String keyFolder = key;
-                if (!keyFolder.endsWith("/")) {
-                    keyFolder += "/";
-                }
-                request.setPrefix(keyFolder);
-                request.setMaxKeys(1);
-                ObjectListing current = client.listObjects(request);
-                if (!current.getObjectSummaries().isEmpty())
-                    return current.getObjectSummaries().get(0);
-            } catch (Exception e) {
-                //
-            }
-            throw new RuntimeException(new NoSuchFileException(bucketName + S3Path.PATH_SEPARATOR + key));
-        });
+                            // if not found (404 err) with the original key, try to find the element as a directory.
+                            .orElseGet(() -> getFolderSummaryFromFirstChildFile(s3Path, bucketName, key)
+                                    .orElseThrow(() -> new NoSuchElementException(bucketName + S3Path.PATH_SEPARATOR + key))));
+        } catch (NoSuchElementException nse) {
+            throw new NoSuchFileException(nse.getMessage());
+        }
+    }
 
-//
+    private Optional<S3ObjectSummary> getFileSummary(S3Path s3Path, String bucketName, String filePath) {
+        try {
+            AmazonS3 client = s3Path.getFileSystem().getClient();
+            ObjectMetadata metadata = client.getObjectMetadata(bucketName, filePath);
+
+            S3ObjectSummary summary = new S3ObjectSummary();
+            summary.setBucketName(bucketName);
+            summary.setETag(metadata.getETag());
+            summary.setKey(filePath);
+            summary.setLastModified(metadata.getLastModified());
+            summary.setSize(metadata.getContentLength());
+            summary.setOwner(client.getObjectAcl(bucketName, filePath).getOwner());
+
+            return Optional.of(S3ObjectSummaryCache.INSTANCE.put(filePath, summary));
+        } catch (AmazonS3Exception e) {
+            if (e.getStatusCode() != HttpStatus.SC_NOT_FOUND) {
+                throw e;
+            }
+        }
+        return Optional.empty();
+    }
+
+    private Optional<S3ObjectSummary> getFolderSummaryFromFirstChildFile(S3Path s3Path, String bucketName, String folderPath) {
+        try {
+            AmazonS3 client = s3Path.getFileSystem().getClient();
+            // is a virtual directory
+            String folderKey = folderPath.endsWith("/") ? folderPath : folderPath.concat("/");
+
+            ListObjectsRequest request = new ListObjectsRequest();
+            request.setBucketName(bucketName);
+            request.setPrefix(folderKey);
+            request.setMaxKeys(1);
+
+            ObjectListing current = client.listObjects(request);
+
+            return isNullOrEmpty(current.getObjectSummaries())
+                    ? Optional.empty()
+                    : Optional.of(S3ObjectSummaryCache.INSTANCE.put(folderPath, current.getObjectSummaries().get(0)));
+        } catch (Exception e) {
+            log.warn("Error occurred while getting the folder summary", e);
+            return Optional.empty();
+        }
     }
 
     /**
@@ -89,7 +100,7 @@ public class S3Utils {
      * @return S3FileAttributes never null
      */
     public S3BasicFileAttributes getS3FileAttributes(S3Path s3Path) throws NoSuchFileException {
-        S3ObjectSummary objectSummary = s3Path.getObjectSummary() == null ? getS3ObjectSummary(s3Path) : s3Path.getObjectSummary();
+        S3ObjectSummary objectSummary = isNull(s3Path.getObjectSummary()) ? getS3ObjectSummary(s3Path) : s3Path.getObjectSummary();
         return toS3FileAttributes(objectSummary, s3Path.getKey());
     }
 
@@ -98,7 +109,6 @@ public class S3Utils {
      *
      * @param s3Path Path mandatory not null
      * @return S3PosixFileAttributes never null
-     * @throws NoSuchFileException if the Path doesnt exists
      */
     public S3PosixFileAttributes getS3PosixFileAttributes(S3Path s3Path) throws NoSuchFileException {
         S3ObjectSummary objectSummary = getS3ObjectSummary(s3Path);

@@ -393,6 +393,8 @@ public class S3FileSystemProvider extends FileSystemProvider {
         s3Path.getFileSystem().getClient().deleteObject(bucketName, key);
         // we delete the two objects (sometimes exists the key '/' and sometimes not)
         s3Path.getFileSystem().getClient().deleteObject(bucketName, key + "/");
+        // And we remove the entity from the object summary cache.
+        S3ObjectSummaryCache.INSTANCE.remove(key);
     }
 
     @Override

@@ -33,7 +33,6 @@ public class S3Path implements Path {
         return S3ObjectSummaryCache.INSTANCE.get(getKey());
     }
 
-
     /**
      * URI not encoded
      * Is the key for AmazonS3
