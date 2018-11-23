@@ -257,7 +257,6 @@ public class ReadAttributesTest extends S3UnitTestBase {
         PosixFileAttributes fileAttributes = s3fsProvider.readAttributes(file, PosixFileAttributes.class);
 
         assertTrue(fileAttributes.permissions().contains(PosixFilePermission.OWNER_READ));
-        assertTrue(fileAttributes.permissions().contains(PosixFilePermission.OWNER_EXECUTE));
     }
 
     @Test
@@ -295,7 +294,6 @@ public class ReadAttributesTest extends S3UnitTestBase {
         PosixFileAttributes fileAttributes = s3fsProvider.readAttributes(file, PosixFileAttributes.class);
 
         assertTrue(fileAttributes.permissions().contains(PosixFilePermission.OWNER_READ));
-        assertTrue(fileAttributes.permissions().contains(PosixFilePermission.OWNER_EXECUTE));
     }
 
     @Test
@@ -333,7 +331,6 @@ public class ReadAttributesTest extends S3UnitTestBase {
         PosixFileAttributes fileAttributes = s3fsProvider.readAttributes(file, PosixFileAttributes.class);
 
         assertTrue(fileAttributes.permissions().contains(PosixFilePermission.OWNER_READ));
-        assertTrue(fileAttributes.permissions().contains(PosixFilePermission.OWNER_EXECUTE));
     }
 
     // readAttributes owner and group PosixFileAttributes

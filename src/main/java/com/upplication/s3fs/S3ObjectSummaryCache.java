@@ -24,6 +24,10 @@ public enum S3ObjectSummaryCache {
         return cache.remove(key);
     }
 
+    public void clear() {
+        cache.clear();
+    }
+
     public Optional<S3ObjectSummary> getOrCacheDirectory(String key) {
 
         return Optional.ofNullable(get(key))

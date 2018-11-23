@@ -50,6 +50,8 @@ public class S3UnitTestBase {
                 //ignore
             }
         }
+
+        S3ObjectSummaryCache.INSTANCE.clear();
     }
 
     public S3FileSystemProvider getS3fsProvider() {
