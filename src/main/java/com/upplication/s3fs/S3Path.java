@@ -1,5 +1,6 @@
 package com.upplication.s3fs;
 
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
@@ -28,6 +29,11 @@ public class S3Path implements Path {
      */
     private final S3FileStore fileStore;
 
+    public S3ObjectSummary getObjectSummary() {
+        return S3ObjectSummaryCache.INSTANCE.get(getKey());
+    }
+
+
     /**
      * URI not encoded
      * Is the key for AmazonS3
@@ -43,6 +49,11 @@ public class S3Path implements Path {
      * S3BasicFileAttributes cache
      */
     private S3BasicFileAttributes fileAttributes;
+
+    public S3Path(S3FileSystem fileSystem, String first, String[] keyParts, S3ObjectSummary objectSummary) {
+        this(fileSystem, first, keyParts);
+        S3ObjectSummaryCache.INSTANCE.put(getKey(), objectSummary);
+    }
 
     /**
      * Build an S3Path from path segments. '/' are stripped from each segment.
