@@ -34,7 +34,7 @@ public enum S3ObjectSummaryCache {
                 .map(Optional::of)
                 .orElseGet(() -> cache.keySet()
                         .stream()
-                        .filter(k -> k.startsWith(key))
+                        .filter(k -> k.startsWith(key + "/"))
                         .findFirst()
                         .map(s -> put(key, get(s))));
     }
